@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تطبيق العناية الصيفي</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* المتغيرات الأساسية (الوضع النهاري) */
+        :root {
+            --primary: #0284c7;
+            --primary-hover: #0369a1;
+            --secondary: #0f172a;
+            --bg-main: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --success: #10b981;
+            --danger: #ef4444;
+            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* متغيرات الوضع الليلي */
+        [data-theme="dark"] {
+            --primary: #38bdf8;
+            --primary-hover: #7dd3fc;
+            --secondary: #f8fafc;
+            --bg-main: #0f172a;
+            --bg-card: #1e293b;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+
+        /* إعدادات عامة */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            transition: var(--transition);
+            line-height: 1.7;
+        }
+
+        /* شريط التمرير (Scrollbar) */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-main); }
+        ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 4px; }
+
+        /* الرأس (Header) */
+        header {
+            background: linear-gradient(135deg, var(--secondary), var(--primary));
+            color: #ffffff;
+            padding: 4rem 1rem 2rem;
+            text-align: center;
+            position: relative;
+            border-bottom-left-radius: 30px;
+            border-bottom-right-radius: 30px;
+            box-shadow: var(--shadow);
+            margin-bottom: 3rem;
+        }
+
+        header h1 { font-size: 2.5rem; font-weight: 800; margin-bottom: 0.5rem; }
+        header p { font-size: 1.1rem; opacity: 0.9; max-width: 600px; margin: 0 auto; }
+
+        /* زر الوضع الليلي */
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            backdrop-filter: blur(5px);
+            transition: var(--transition);
+        }
+        .theme-toggle:hover { background: rgba(255, 255, 255, 0.3); transform: rotate(15deg); }
+
+        /* متتبع الميزانية (Budget Widget) */
+        .budget-widget {
+            background: var(--bg-card);
+            max-width: 500px;
+            margin: -4rem auto 3rem;
+            padding: 1.5rem;
+            border-radius: 20px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            border: 1px solid var(--border-color);
+        }
+        .budget-widget h3 { color: var(--text-muted); font-size: 1rem; }
+        .budget-amount { font-size: 2.5rem; font-weight: 800; color: var(--success); transition: var(--transition); }
+        .budget-amount.low { color: var(--danger); }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; }
+        
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 1.8rem;
+            margin-bottom: 2rem;
+            color: var(--text-main);
+        }
+        .section-title i { color: var(--primary); }
+
+        /* شبكة المنتجات */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 2rem;
+            margin-bottom: 4rem;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0; right: 0; left: 0;
+            height: 4px;
+            background: var(--primary);
+            opacity: 0;
+            transition: var(--transition);
+        }
+        .card:hover { transform: translateY(-5px); }
+        .card:hover::before { opacity: 1; }
+        .card.bought { border-color: var(--success); opacity: 0.85; }
+        .card.bought::before { background: var(--success); opacity: 1; }
+
+        .card-header { margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; }
+        .card-header h3 { color: var(--primary); font-size: 1.3rem; margin-bottom: 0.3rem; }
+        .card-header p { color: var(--text-muted); font-size: 0.9rem; }
+        .card.bought .card-header h3 { color: var(--success); text-decoration: line-through; }
+
+        .options { flex-grow: 1; margin-bottom: 1rem; }
+        .option-item { background: var(--bg-main); padding: 1rem; border-radius: 12px; margin-bottom: 0.8rem; }
+        .option-item h4 { font-size: 1rem; margin-bottom: 0.5rem; }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--bg-card);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+        .btn:hover { background: var(--primary); color: white; border-color: var(--primary); }
+
+        /* منطقة التفاعل في الكارت (شراء وسعر) */
+        .card-action {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--bg-main);
+            padding: 1rem;
+            border-radius: 12px;
+            margin-top: auto;
+        }
+        .checkbox-wrapper { display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 600; }
+        .checkbox-wrapper input[type="checkbox"] {
+            width: 20px; height: 20px; accent-color: var(--success); cursor: pointer;
+        }
+        
+        .price-input {
+            width: 100px;
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-card);
+            color: var(--text-main);
+            font-family: inherit;
+            outline: none;
+            transition: var(--transition);
+        }
+        .price-input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.2); }
+        .price-input:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* قسم الروتين */
+        .routine-wrapper { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-bottom: 4rem; }
+        .routine-card { background: var(--bg-card); border-radius: 20px; padding: 2rem; box-shadow: var(--shadow); border: 1px solid var(--border-color); }
+        .routine-card h3 { color: var(--primary); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 10px; border-bottom: 2px dashed var(--border-color); padding-bottom: 1rem; }
+        
+        .task-item { display: flex; align-items: flex-start; gap: 15px; margin-bottom: 1.2rem; cursor: pointer; }
+        .task-item input[type="checkbox"] { margin-top: 5px; width: 18px; height: 18px; accent-color: var(--primary); }
+        .task-content { flex-grow: 1; transition: var(--transition); }
+        .task-item.completed .task-content { text-decoration: line-through; color: var(--text-muted); opacity: 0.7; }
+
+        /* تلميحات */
+        .tips-section { background: rgba(2, 132, 199, 0.05); border: 1px solid rgba(2, 132, 199, 0.2); border-radius: 20px; padding: 2rem; margin-bottom: 4rem; }
+        .tips-section h3 { color: var(--primary); margin-bottom: 1rem; }
+        .tips-list { list-style: none; }
+        .tips-list li { position: relative; padding-right: 30px; margin-bottom: 10px; }
+        .tips-list li::before { content: '\f0eb'; font-family: 'Font Awesome 6 Free'; font-weight: 900; position: absolute; right: 0; color: #eab308; }
+
+        @media (max-width: 768px) {
+            header h1 { font-size: 2rem; }
+            .budget-widget { margin: -2rem 1rem 3rem; }
+            .budget-amount { font-size: 2rem; }
+            .card-action { flex-direction: column; gap: 10px; align-items: flex-start; }
+            .price-input { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <button class="theme-toggle" id="themeToggle" title="تبديل الوضع الليلي/النهاري">
+            <i class="fas fa-moon"></i>
+        </button>
+        <h1><i class="fas fa-leaf"></i> روتين العناية الصيفي</h1>
+        <p>مصمم بذكاء ليناسب جدولك المزدحم، ويحمي بشرتك وشعرك بأقل جهد وتكلفة.</p>
+    </header>
+
+    <div class="budget-widget">
+        <h3>الميزانية المتبقية (دينار عراقي)</h3>
+        <div class="budget-amount" id="budgetDisplay">100,000</div>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 5px;">أدخل أسعار المنتجات التي تشتريها أدناه ليتم خصمها</p>
+    </div>
+
+    <div class="container">
+        
+        <h2 class="section-title"><i class="fas fa-shopping-bag"></i> قائمة المشتريات الأساسية</h2>
+        
+        <div class="grid" id="productsGrid">
+            </div>
+
+        <h2 class="section-title"><i class="fas fa-calendar-check"></i> متتبع الروتين اليومي</h2>
+        
+        <div class="routine-wrapper">
+            <div class="routine-card">
+                <h3><i class="fas fa-sun" style="color: #f59e0b;"></i> قبل الدوام (الصباح)</h3>
+                <label class="task-item">
+                    <input type="checkbox" class="routine-check">
+                    <div class="task-content">غسل الوجه بالغسول السريع وتجفيفه بلطف.</div>
+                </label>
+                <label class="task-item">
+                    <input type="checkbox" class="routine-check">
+                    <div class="task-content">وضع مضاد التعرق على بشرة جافة ونظيفة.</div>
+                </label>
+                <label class="task-item">
+                    <input type="checkbox" class="routine-check">
+                    <div class="task-content">توزيع واقي الشمس على الوجه والرقبة قبل الخروج بـ 15 دقيقة.</div>
+                </label>
+                <label class="task-item">
+                    <input type="checkbox" class="routine-check">
+                    <div class="task-content">تصفيف الشعر باستخدام كريم التصفيف المرطب.</div>
+                </label>
+            </div>
+
+            <div class="routine-card">
+                <h3><i class="fas fa-moon" style="color: #8b5cf6;"></i> بعد المستشفى (المساء)</h3>
+                <label class="task-item">
+                    <input type="checkbox" class="routine-check">
+                    <div class="task-content">الاستحمام بغسول الجسم للتخلص من العرق وبكتيريا المستشفى.</div>
+                </label>
+                <label class="task-item">
+                    <input type="checkbox" class="routine-check">
+                    <div class="task-content">غسل الوجه بالغسول لإزالة الأوساخ وواقي الشمس.</div>
+                </label>
+                <label class="task-item">
+                    <input type="checkbox" class="routine-check">
+                    <div class="task-content">وضع المرطب المائي على الوجه وهو شبه مبلل.</div>
+                </label>
+            </div>
+        </div>
+
+        <div class="tips-section">
+            <h3><i class="fas fa-lightbulb"></i> أسرار الاستمرارية والنتائج</h3>
+            <ul class="tips-list">
+                <li><strong>الشعر:</strong> الشامبو يستخدم مرتين لثلاث مرات أسبوعياً فقط. الغسيل اليومي بالشامبو هو العدو الأول للشعر الجاف.</li>
+                <li><strong>الرؤوس السوداء:</strong> حمض الساليسيليك يحتاج للوقت (أسبوعين تقريباً) ليذيب الدهون بالمسام. لا تعصرها بيدك لتجنب التندب.</li>
+                <li><strong>الترطيب الداخلي:</strong> العمل الحركي في بيئة المستشفى المكيفة يسحب سوائل الجسم. اجعل شرب الماء أولوية لتقليل بهتان البشرة.</li>
+            </ul>
+        </div>
+
+    </div>
+
+    <script>
+        // قاعدة بيانات المنتجات
+        const productsData = [
+            { id: 'p1', title: '1. غسول الوجه (الساليسيليك)', desc: 'لتنظيف المسام وإزالة الرؤوس السوداء.', 
+              opts: [ {name: 'CeraVe SA Smoothing Cleanser', q: 'CeraVe SA Smoothing Cleanser'}, {name: 'Neutrogena Visibly Clear Spot Proofing', q: 'Neutrogena Visibly Clear Spot Proofing Wash'} ]},
+            { id: 'p2', title: '2. واقي الشمس (غير دهني)', desc: 'أساسي لحماية البشرة أثناء التنقلات.', 
+              opts: [ {name: 'Eucerin Oil Control Dry Touch', q: 'Eucerin Oil Control Sun Gel-Cream Dry Touch'}, {name: 'Neutrogena Ultra Sheer Dry-Touch', q: 'Neutrogena Ultra Sheer Dry-Touch Sunscreen'} ]},
+            { id: 'p3', title: '3. غسول الجسم', desc: 'للانتعاش وقتل بكتيريا المستشفى بعد الدوام.', 
+              opts: [ {name: 'Dettol Cool Body Wash', q: 'Dettol Cool Body Wash Crisp Menthol'}, {name: 'Nivea Men Energy', q: 'Nivea Men Energy Shower Gel'} ]},
+            { id: 'p4', title: '4. مضاد تعرق قوي', desc: 'للسيطرة على التعرق أثناء المجهود الحركي.', 
+              opts: [ {name: 'Rexona Men Clinical Protection', q: 'Rexona Men Clinical Protection'}, {name: 'Nivea Men Deep Black Carbon', q: 'Nivea Men Deep Black Carbon Roll on'} ]},
+            { id: 'p5', title: '5. شامبو وبلسم', desc: 'لعلاج القشرة مع مراعاة جفاف الشعر.', 
+              opts: [ {name: 'Head & Shoulders (زيت اللوز)', q: 'Head and Shoulders Dry Scalp Care Almond Oil'}, {name: 'Clear Men Anti-Dandruff', q: 'Clear Men Anti Dandruff Shampoo'} ]},
+            { id: 'p6', title: '6. كريم التصفيف', desc: 'تثبيت طبيعي بدون جفاف وتقليل للهيشان.', 
+              opts: [ {name: 'Nivea Men Craft Stylers', q: 'Nivea Men Craft Stylers Natural Look Styling Cream'}, {name: 'Vatika Naturals Styling Cream', q: 'Vatika Naturals Styling Cream Argan'} ]},
+            { id: 'p7', title: '7. مرطب خفيف (مائي)', desc: 'لترطيب الوجه ليلاً دون ملمس دهني مزعج.', 
+              opts: [ {name: 'Neutrogena Hydro Boost Water Gel', q: 'Neutrogena Hydro Boost Water Gel'}, {name: 'Simple Water Boost Hydrating Gel', q: 'Simple Water Boost Hydrating Gel Cream'} ]}
+        ];
+
+        // 1. توليد المنتجات في HTML
+        const grid = document.getElementById('productsGrid');
+        productsData.forEach(prod => {
+            let html = `
+                <div class="card" id="card-${prod.id}">
+                    <div class="card-header">
+                        <h3>${prod.title}</h3>
+                        <p>${prod.desc}</p>
+                    </div>
+                    <div class="options">
+                        ${prod.opts.map((opt, index) => `
+                            <div class="option-item">
+                                <h4>خيار ${index + 1}: ${opt.name}</h4>
+                                <a href="https://www.google.com/search?tbm=isch&q=${encodeURIComponent(opt.q)}" target="_blank" class="btn">
+                                    <i class="fas fa-search"></i> بحث صور
+                                </a>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="card-action">
+                        <label class="checkbox-wrapper">
+                            <input type="checkbox" id="chk-${prod.id}" onchange="toggleProduct('${prod.id}')">
+                            تم الشراء
+                        </label>
+                        <input type="number" id="price-${prod.id}" class="price-input" placeholder="السعر" min="0" oninput="calculateBudget()">
+                    </div>
+                </div>
+            `;
+            grid.innerHTML += html;
+        });
+
+        // 2. إدارة الميزانية وحفظ البيانات (LocalStorage)
+        const TOTAL_BUDGET = 100000;
+        
+        function toggleProduct(id) {
+            const card = document.getElementById(`card-${id}`);
+            const chk = document.getElementById(`chk-${id}`);
+            const priceInput = document.getElementById(`price-${id}`);
+            
+            if (chk.checked) {
+                card.classList.add('bought');
+            } else {
+                card.classList.remove('bought');
+                priceInput.value = ''; // تصفير السعر عند إلغاء الشراء
+            }
+            saveData();
+            calculateBudget();
+        }
+
+        function calculateBudget() {
+            let spent = 0;
+            productsData.forEach(prod => {
+                const chk = document.getElementById(`chk-${prod.id}`);
+                const priceInput = document.getElementById(`price-${prod.id}`);
+                if (chk.checked && priceInput.value) {
+                    spent += parseInt(priceInput.value) || 0;
+                }
+            });
+
+            const remaining = TOTAL_BUDGET - spent;
+            const display = document.getElementById('budgetDisplay');
+            
+            // تنسيق الرقم مع الفواصل
+            display.innerText = new Intl.NumberFormat('ar-IQ').format(remaining);
+            
+            if (remaining < 20000) {
+                display.classList.add('low');
+            } else {
+                display.classList.remove('low');
+            }
+        }
+
+        // 3. متتبع الروتين اليومي
+        const routineChecks = document.querySelectorAll('.routine-check');
+        routineChecks.forEach((chk, index) => {
+            chk.addEventListener('change', function() {
+                if (this.checked) {
+                    this.parentElement.classList.add('completed');
+                } else {
+                    this.parentElement.classList.remove('completed');
+                }
+                saveData();
+            });
+        });
+
+        // 4. حفظ واسترجاع البيانات من المتصفح
+        function saveData() {
+            const state = { products: {}, routine: [] };
+            
+            productsData.forEach(prod => {
+                state.products[prod.id] = {
+                    bought: document.getElementById(`chk-${prod.id}`).checked,
+                    price: document.getElementById(`price-${prod.id}`).value
+                };
+            });
+
+            routineChecks.forEach((chk, i) => {
+                state.routine[i] = chk.checked;
+            });
+
+            localStorage.setItem('careRoutineState', JSON.stringify(state));
+        }
+
+        function loadData() {
+            const saved = localStorage.getItem('careRoutineState');
+            if (saved) {
+                const state = JSON.parse(saved);
+                
+                productsData.forEach(prod => {
+                    if (state.products[prod.id]) {
+                        const chk = document.getElementById(`chk-${prod.id}`);
+                        const priceInput = document.getElementById(`price-${prod.id}`);
+                        
+                        chk.checked = state.products[prod.id].bought;
+                        priceInput.value = state.products[prod.id].price;
+                        
+                        if (chk.checked) {
+                            document.getElementById(`card-${prod.id}`).classList.add('bought');
+                        }
+                    }
+                });
+
+                routineChecks.forEach((chk, i) => {
+                    chk.checked = state.routine[i];
+                    if (chk.checked) chk.parentElement.classList.add('completed');
+                });
+                
+                calculateBudget();
+            }
+        }
+
+        // 5. تبديل الوضع الليلي
+        const themeToggle = document.getElementById('themeToggle');
+        const icon = themeToggle.querySelector('i');
+        
+        // التحقق من الثيم المفضل مسبقاً
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        updateThemeIcon(savedTheme);
+
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        });
+
+        function updateThemeIcon(theme) {
+            if (theme === 'dark') {
+                icon.className = 'fas fa-sun';
+            } else {
+                icon.className = 'fas fa-moon';
+            }
+        }
+
+        // تشغيل دوال الاسترجاع عند تحميل الصفحة
+        window.onload = loadData;
+
+    </script>
+</body>
+</html>
